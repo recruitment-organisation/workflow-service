@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: workflow-service
+
+
+  datasource:
+    url: ${FLOWABLE_DB_URL:jdbc:postgresql://localhost:5432/workflow_db}
+    username: ${FLOWABLE_DB_USERNAME}
+    password: ${FLOWABLE_DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+  cloud:
+    config:
+      enabled: true
+      label: main
+
+  config:
+    import: optional:configserver:${CONFIG_SERVICE_URL:http://localhost:9999}
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_SERVER_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:micro-service}/protocol/openid-connect/certs
+          issuer-uri: ${KEYCLOAK_SERVER_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:micro-service}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${DISCOVERY_SERVICE_URL:http://localhost:8761/eureka}
+
+    register-with-eureka: true
+    fetch-registry: true
+
+  instance:
+    prefer-ip-address: true
+
+flowable:
+  database-schema-update: true
+  async-executor-activate: true
+  check-process-definitions: true
+server:
+  port: 8099
