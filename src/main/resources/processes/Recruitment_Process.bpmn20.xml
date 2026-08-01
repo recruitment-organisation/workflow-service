@@ -69,7 +69,7 @@
 " flowable:delegateExpression="${notificationDelegate}"></serviceTask>
     <serviceTask id="sid-71191D7B-3894-4763-8B44-B4E6327F487D" name="                              Send Welcome Notification
 " flowable:delegateExpression="${notificationDelegate}"></serviceTask>
-    <serviceTask id="sid-081C2007-C609-4373-BEFF-261AC307D803" name="Validation formatcv" flowable:delegateExpression="${cvValidationDelegate}"></serviceTask>
+    <serviceTask id="sid-081C2007-C609-4373-BEFF-261AC307D803" name="Validation formatcv" flowable:delegateExpression="${cvTemplateValidationDelegate}"></serviceTask>
     <sequenceFlow id="sid-32E034AD-4EB8-47B1-A000-0DC97C0478E1" sourceRef="startEvent1" targetRef="sid-2FF9717B-4C84-4035-A0A1-D8482A0FB494"></sequenceFlow>
     <sequenceFlow id="sid-39B6BD30-3723-4330-ABDD-70905A21FF36" sourceRef="sid-2FF9717B-4C84-4035-A0A1-D8482A0FB494" targetRef="sid-081C2007-C609-4373-BEFF-261AC307D803"></sequenceFlow>
     <exclusiveGateway id="sid-73599FD7-1551-45B6-A0AF-4823561E5273" name="CV Valid?"></exclusiveGateway>

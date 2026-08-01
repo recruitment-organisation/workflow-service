@@ -15,16 +15,26 @@ spring:
     config:
       enabled: true
       label: main
+    openfeign:
+      circuitbreaker:
+        enabled: true
 
   config:
     import: optional:configserver:${CONFIG_SERVICE_URL:http://localhost:9999}
 
   security:
     oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: ${KEYCLOAK_SERVER_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:micro-service}/protocol/openid-connect/certs
-          issuer-uri: ${KEYCLOAK_SERVER_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:micro-service}
+      client:
+        registration:
+          workflow-client:
+            provider: keycloak
+            client-id: workflow-service
+            client-secret: ${WORKFLOW_CLIENT_SECRET}
+            authorization-grant-type: client_credentials
+#      resourceserver:
+#        jwt:
+#          jwk-set-uri: ${KEYCLOAK_SERVER_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:micro-service}/protocol/openid-connect/certs
+#          issuer-uri: ${KEYCLOAK_SERVER_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:micro-service}
 
 eureka:
   client:
@@ -41,5 +51,8 @@ flowable:
   database-schema-update: true
   async-executor-activate: true
   check-process-definitions: true
+  history-level: full
+
+
 server:
   port: 8099
