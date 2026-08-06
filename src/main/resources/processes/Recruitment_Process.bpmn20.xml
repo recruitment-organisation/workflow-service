@@ -10,7 +10,13 @@
     </startEvent>
     <serviceTask id="sid-A8C5AC1E-2520-4D53-9940-97772B397A8D" name="AI CV Analysis
 " flowable:delegateExpression="${aiCvAnalysisDelegate}"></serviceTask>
-    <userTask id="sid-DF9C15EA-2620-4ECF-ABA7-9DE292D11DCB" name=" HR Interview" flowable:assignee="$INITIATOR" flowable:formFieldValidation="true">
+    <userTask id="hrCvFiltering" name="HR CV Filtering" flowable:formFieldValidation="true">
+      <extensionElements>
+        <flowable:formProperty id="hrCvApproved" name="CV accepté par RH" type="boolean" required="true"></flowable:formProperty>
+        <flowable:formProperty id="hrCvComment" name="Commentaire du filtrage CV RH" type="string"></flowable:formProperty>
+      </extensionElements>
+    </userTask>
+    <userTask id="hrInterview" name="HR Interview" flowable:formFieldValidation="true">
       <extensionElements>
         <flowable:formProperty id="hrApproved" name="hr approved" type="boolean" required="true"></flowable:formProperty>
         <flowable:formProperty id="hrComment" name="commentaire de rh" type="string"></flowable:formProperty>
@@ -18,7 +24,7 @@
         <modeler:activiti-idm-initiator xmlns:modeler="http://flowable.org/modeler"><![CDATA[true]]></modeler:activiti-idm-initiator>
       </extensionElements>
     </userTask>
-    <userTask id="sid-AFF634ED-8CEC-438C-BD4C-F57F80E4AB8E" name=" Technical Interview" flowable:assignee="$INITIATOR" flowable:formFieldValidation="true">
+    <userTask id="technicalInterview" name="Technical Interview" flowable:formFieldValidation="true">
       <extensionElements>
         <flowable:formProperty id="technicalApproved" name="tech approved" type="boolean" required="true"></flowable:formProperty>
         <flowable:formProperty id="technicalRate" name="technical Rate" type="long"></flowable:formProperty>
@@ -26,27 +32,29 @@
         <modeler:activiti-idm-initiator xmlns:modeler="http://flowable.org/modeler"><![CDATA[true]]></modeler:activiti-idm-initiator>
       </extensionElements>
     </userTask>
-    <userTask id="sid-4A0EB671-21DE-4EFB-8B87-974A131F3895" name=" Manager Interview" flowable:assignee="$INITIATOR" flowable:formFieldValidation="true">
+    <userTask id="managerInterview" name="Manager Interview" flowable:formFieldValidation="true">
       <extensionElements>
         <flowable:formProperty id="managerApproved" name="Manager Approved" type="boolean" required="true"></flowable:formProperty>
         <flowable:formProperty id="managerComment" name="Manager Comment" type="string"></flowable:formProperty>
         <modeler:activiti-idm-initiator xmlns:modeler="http://flowable.org/modeler"><![CDATA[true]]></modeler:activiti-idm-initiator>
       </extensionElements>
     </userTask>
-    <exclusiveGateway id="sid-CB513DA8-3682-456E-ADE5-E0DA1EB495F8" name="Score &gt;= 70 ?
+    <exclusiveGateway id="sid-CB513DA8-3682-456E-ADE5-E0DA1EB495F8" name="Score IA analysé
 "></exclusiveGateway>
     <sequenceFlow id="sid-849D18BF-8708-41B9-9C32-CB1EF124B596" sourceRef="sid-A8C5AC1E-2520-4D53-9940-97772B397A8D" targetRef="sid-CB513DA8-3682-456E-ADE5-E0DA1EB495F8"></sequenceFlow>
     <exclusiveGateway id="sid-53587564-8F81-4247-B32D-BB1F2EE4CF86" name="HR Approved ?
 "></exclusiveGateway>
+    <exclusiveGateway id="hrCvFilteringDecision" name="HR CV Filtering Approved?"></exclusiveGateway>
     <exclusiveGateway id="sid-6C2A3697-860F-4DB1-BEC3-861A0FD31B30" name="   Technical Approved ?
 "></exclusiveGateway>
     <exclusiveGateway id="sid-DD73AAFA-B2A3-4517-B55A-07D8F90DAAF9" name="Manager Approved ?
 "></exclusiveGateway>
-    <sequenceFlow id="sid-2D26780B-5322-47D3-97F4-BDE3C49C56BD" sourceRef="sid-4A0EB671-21DE-4EFB-8B87-974A131F3895" targetRef="sid-DD73AAFA-B2A3-4517-B55A-07D8F90DAAF9"></sequenceFlow>
+    <sequenceFlow id="sid-2D26780B-5322-47D3-97F4-BDE3C49C56BD" sourceRef="managerInterview" targetRef="sid-DD73AAFA-B2A3-4517-B55A-07D8F90DAAF9"></sequenceFlow>
     <serviceTask id="sid-30964312-B025-4121-B7CB-1939166A3446" name="Convert Candidate                   to Employee
 " flowable:delegateExpression="${convertCandidateDelegate}"></serviceTask>
-    <sequenceFlow id="sid-E9E799DD-FBAD-41BE-9FE8-1BBD8EF39358" sourceRef="sid-AFF634ED-8CEC-438C-BD4C-F57F80E4AB8E" targetRef="sid-6C2A3697-860F-4DB1-BEC3-861A0FD31B30"></sequenceFlow>
-    <sequenceFlow id="sid-3D401BCB-04F6-43A1-B6CF-06A43B2ADB86" sourceRef="sid-DF9C15EA-2620-4ECF-ABA7-9DE292D11DCB" targetRef="sid-53587564-8F81-4247-B32D-BB1F2EE4CF86"></sequenceFlow>
+    <sequenceFlow id="sid-E9E799DD-FBAD-41BE-9FE8-1BBD8EF39358" sourceRef="technicalInterview" targetRef="sid-6C2A3697-860F-4DB1-BEC3-861A0FD31B30"></sequenceFlow>
+    <sequenceFlow id="sid-3D401BCB-04F6-43A1-B6CF-06A43B2ADB86" sourceRef="hrInterview" targetRef="sid-53587564-8F81-4247-B32D-BB1F2EE4CF86"></sequenceFlow>
+    <sequenceFlow id="hrCvFilteringToDecision" sourceRef="hrCvFiltering" targetRef="hrCvFilteringDecision"></sequenceFlow>
     <serviceTask id="sid-08F3F0A0-7A22-477F-92F6-B4CFEAC4D742" name="Update Application" flowable:delegateExpression="${updateApplicationDelegate}"></serviceTask>
     <sequenceFlow id="sid-820C7C19-47C7-49DF-855E-A95E935CD367" sourceRef="sid-08F3F0A0-7A22-477F-92F6-B4CFEAC4D742" targetRef="sid-230A9353-9E7A-4E7D-B169-AE090C9379BF"></sequenceFlow>
     <endEvent id="sid-47DAE6D8-87AC-4BB8-80FC-4AC48F2611F8" name="End Rejected"></endEvent>
@@ -70,7 +78,7 @@
     <serviceTask id="sid-71191D7B-3894-4763-8B44-B4E6327F487D" name="                              Send Welcome Notification
 " flowable:delegateExpression="${notificationDelegate}"></serviceTask>
     <serviceTask id="sid-081C2007-C609-4373-BEFF-261AC307D803" name="Validation formatcv" flowable:delegateExpression="${cvTemplateValidationDelegate}"></serviceTask>
-    <sequenceFlow id="sid-32E034AD-4EB8-47B1-A000-0DC97C0478E1" sourceRef="startEvent1" targetRef="sid-2FF9717B-4C84-4035-A0A1-D8482A0FB494"></sequenceFlow>
+    <sequenceFlow id="sid-32E034AD-4EB8-47B1-A000-0DC97C0478E1" sourceRef="startEvent1" targetRef="sid-081C2007-C609-4373-BEFF-261AC307D803"></sequenceFlow>
     <sequenceFlow id="sid-39B6BD30-3723-4330-ABDD-70905A21FF36" sourceRef="sid-2FF9717B-4C84-4035-A0A1-D8482A0FB494" targetRef="sid-081C2007-C609-4373-BEFF-261AC307D803"></sequenceFlow>
     <exclusiveGateway id="sid-73599FD7-1551-45B6-A0AF-4823561E5273" name="CV Valid?"></exclusiveGateway>
     <sequenceFlow id="sid-E2C66247-0C53-488C-860F-812F157AA7A7" sourceRef="sid-081C2007-C609-4373-BEFF-261AC307D803" targetRef="sid-73599FD7-1551-45B6-A0AF-4823561E5273"></sequenceFlow>
@@ -80,11 +88,11 @@
       </extensionElements>
     </userTask>
     <sequenceFlow id="sid-1934A564-8CF0-4138-99FD-C4D034A386A1" sourceRef="sid-3140788F-868D-4F20-88A1-D66AF0BA345A" targetRef="sid-081C2007-C609-4373-BEFF-261AC307D803"></sequenceFlow>
-    <sequenceFlow id="sid-361CBEFD-4FC8-4C44-A568-A828721625AA" name="No" sourceRef="sid-CB513DA8-3682-456E-ADE5-E0DA1EB495F8" targetRef="sid-08F3F0A0-7A22-477F-92F6-B4CFEAC4D742">
+    <sequenceFlow id="sid-361CBEFD-4FC8-4C44-A568-A828721625AA" name="Score below 70" sourceRef="sid-CB513DA8-3682-456E-ADE5-E0DA1EB495F8" targetRef="hrCvFiltering">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${aiScore < 70}]]></conditionExpression>
     </sequenceFlow>
     <sequenceFlow id="sid-0C95D328-EB42-45DB-B77F-1AAEBAC50ED5" name="Yes
-" sourceRef="sid-CB513DA8-3682-456E-ADE5-E0DA1EB495F8" targetRef="sid-DF9C15EA-2620-4ECF-ABA7-9DE292D11DCB">
+" sourceRef="sid-CB513DA8-3682-456E-ADE5-E0DA1EB495F8" targetRef="hrCvFiltering">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${aiScore >= 70}]]></conditionExpression>
     </sequenceFlow>
     <serviceTask id="sid-B19003FF-F105-411D-9778-BF41B98F2391" name="Update application status" flowable:delegateExpression="${updateApplicationStatusDelegate}"></serviceTask>
@@ -96,21 +104,27 @@
     <boundaryEvent id="reviseCVTimer" name="revse  CV Timeout 2 hours" attachedToRef="sid-3140788F-868D-4F20-88A1-D66AF0BA345A" cancelActivity="true">
       <documentation>Close application if candidate does not submit a corrected CV within 2 days.</documentation>
       <timerEventDefinition>
-        <timeDuration>P2H</timeDuration>
+        <timeDuration>PT2H</timeDuration>
       </timerEventDefinition>
     </boundaryEvent>
     <sequenceFlow id="sid-9B0B301A-C90E-450D-9115-875CBAE85466" name="Yes
-" sourceRef="sid-53587564-8F81-4247-B32D-BB1F2EE4CF86" targetRef="sid-AFF634ED-8CEC-438C-BD4C-F57F80E4AB8E">
+" sourceRef="sid-53587564-8F81-4247-B32D-BB1F2EE4CF86" targetRef="managerInterview">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${hrApproved == true}]]></conditionExpression>
     </sequenceFlow>
     <sequenceFlow id="sid-76A37364-D370-48BF-B5AF-2F3A9AEF007A" name="No" sourceRef="sid-53587564-8F81-4247-B32D-BB1F2EE4CF86" targetRef="sid-08F3F0A0-7A22-477F-92F6-B4CFEAC4D742">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${hrApproved==false}]]></conditionExpression>
     </sequenceFlow>
+    <sequenceFlow id="hrCvFilteringAccepted" name="Accepted" sourceRef="hrCvFilteringDecision" targetRef="hrInterview">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${hrCvApproved == true}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="hrCvFilteringRejected" name="Rejected" sourceRef="hrCvFilteringDecision" targetRef="sid-08F3F0A0-7A22-477F-92F6-B4CFEAC4D742">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${hrCvApproved == false}]]></conditionExpression>
+    </sequenceFlow>
     <sequenceFlow id="sid-9BCC4E8E-56FA-4217-810A-913590160AC3" name="No" sourceRef="sid-6C2A3697-860F-4DB1-BEC3-861A0FD31B30" targetRef="sid-08F3F0A0-7A22-477F-92F6-B4CFEAC4D742">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${technicalApproved == false}]]></conditionExpression>
     </sequenceFlow>
     <sequenceFlow id="sid-5FE3CDD2-9170-49C6-ABEC-4AA03ADFC94F" name="Yes
-" sourceRef="sid-6C2A3697-860F-4DB1-BEC3-861A0FD31B30" targetRef="sid-4A0EB671-21DE-4EFB-8B87-974A131F3895">
+" sourceRef="sid-6C2A3697-860F-4DB1-BEC3-861A0FD31B30" targetRef="managerInterview">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${technicalApproved == true}]]></conditionExpression>
     </sequenceFlow>
     <sequenceFlow id="sid-1DB8EE14-6234-47E3-BA4B-CF2E6BE657FD" name="Yes
@@ -123,9 +137,11 @@
     <sequenceFlow id="sid-DEF690EE-70E4-41F1-932E-99C1255A6460" name="Yes" sourceRef="sid-73599FD7-1551-45B6-A0AF-4823561E5273" targetRef="sid-A8C5AC1E-2520-4D53-9940-97772B397A8D">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${cvValid ==true}]]></conditionExpression>
     </sequenceFlow>
-    <sequenceFlow id="sid-32C8EFBF-AD06-4881-BBFD-600E44A946EE" name="No" sourceRef="sid-73599FD7-1551-45B6-A0AF-4823561E5273" targetRef="sid-3140788F-868D-4F20-88A1-D66AF0BA345A">
+    <sequenceFlow id="sid-32C8EFBF-AD06-4881-BBFD-600E44A946EE" name="No" sourceRef="sid-73599FD7-1551-45B6-A0AF-4823561E5273" targetRef="cvRevisionNotification">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${cvValid == false}]]></conditionExpression>
     </sequenceFlow>
+    <serviceTask id="cvRevisionNotification" name="Notify candidate to revise CV" flowable:delegateExpression="${cvRevisionNotificationDelegate}"></serviceTask>
+    <sequenceFlow id="cvRevisionNotificationToReview" sourceRef="cvRevisionNotification" targetRef="sid-3140788F-868D-4F20-88A1-D66AF0BA345A"></sequenceFlow>
   </process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_recruitmentProcess">
     <bpmndi:BPMNPlane bpmnElement="recruitmentProcess" id="BPMNPlane_recruitmentProcess">
@@ -135,13 +151,13 @@
       <bpmndi:BPMNShape bpmnElement="sid-A8C5AC1E-2520-4D53-9940-97772B397A8D" id="BPMNShape_sid-A8C5AC1E-2520-4D53-9940-97772B397A8D">
         <omgdc:Bounds height="80.00000000000003" width="100.0" x="524.9999687075629" y="224.9999798834336"></omgdc:Bounds>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="sid-DF9C15EA-2620-4ECF-ABA7-9DE292D11DCB" id="BPMNShape_sid-DF9C15EA-2620-4ECF-ABA7-9DE292D11DCB">
+      <bpmndi:BPMNShape bpmnElement="hrInterview" id="BPMNShape_hrInterview">
         <omgdc:Bounds height="80.0" width="100.00000000000011" x="924.9999433755901" y="224.9999731779119"></omgdc:Bounds>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="sid-AFF634ED-8CEC-438C-BD4C-F57F80E4AB8E" id="BPMNShape_sid-AFF634ED-8CEC-438C-BD4C-F57F80E4AB8E">
+      <bpmndi:BPMNShape bpmnElement="technicalInterview" id="BPMNShape_technicalInterview">
         <omgdc:Bounds height="80.00000000000003" width="100.0" x="1304.9999611079704" y="224.99998658895552"></omgdc:Bounds>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="sid-4A0EB671-21DE-4EFB-8B87-974A131F3895" id="BPMNShape_sid-4A0EB671-21DE-4EFB-8B87-974A131F3895">
+      <bpmndi:BPMNShape bpmnElement="managerInterview" id="BPMNShape_managerInterview">
         <omgdc:Bounds height="80.00000000000003" width="100.0" x="1604.999952167274" y="224.9999798834336"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="sid-CB513DA8-3682-456E-ADE5-E0DA1EB495F8" id="BPMNShape_sid-CB513DA8-3682-456E-ADE5-E0DA1EB495F8">

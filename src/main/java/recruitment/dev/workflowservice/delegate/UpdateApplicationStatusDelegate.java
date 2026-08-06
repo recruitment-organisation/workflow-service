@@ -24,12 +24,12 @@ public class UpdateApplicationStatusDelegate implements JavaDelegate {
 
         applicationClient.updateStatus(
                 applicationId,
-                ApplicationStatus.CLOSED.name()
+                ApplicationStatus.REJECTED.name()
         );
 
-        execution.setVariable("applicationStatus", ApplicationStatus.CLOSED.name());
+        execution.setVariable("applicationStatus", ApplicationStatus.REJECTED.name());
         execution.setVariable("rejectionReason", reason);
 
-        log.info("Application closed after timeout: applicationId={}", applicationId);
+        log.info("Application rejected after CV correction timeout: applicationId={}", applicationId);
     }
 }

@@ -28,13 +28,15 @@ spring:
         registration:
           workflow-client:
             provider: keycloak
-            client-id: workflow-service
+            client-id: ${WORKFLOW_CLIENT_ID:spring-service}
             client-secret: ${WORKFLOW_CLIENT_SECRET}
             authorization-grant-type: client_credentials
-#      resourceserver:
-#        jwt:
-#          jwk-set-uri: ${KEYCLOAK_SERVER_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:micro-service}/protocol/openid-connect/certs
-#          issuer-uri: ${KEYCLOAK_SERVER_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:micro-service}
+        provider:
+          keycloak:
+            issuer-uri: ${KEYCLOAK_SERVER_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:micro-service}
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_SERVER_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:micro-service}
 
 eureka:
   client:
@@ -52,6 +54,12 @@ flowable:
   async-executor-activate: true
   check-process-definitions: true
   history-level: full
+
+resilience4j:
+  timelimiter:
+    instances:
+      RagClientanalyzeCvLong:
+        timeout-duration: 60s
 
 
 server:

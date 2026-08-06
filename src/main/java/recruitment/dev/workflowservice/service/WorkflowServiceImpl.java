@@ -4,10 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.flowable.engine.RuntimeService;
 import org.flowable.engine.runtime.ProcessInstance;
+import org.flowable.engine.TaskService;
+import org.flowable.task.api.Task;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import recruitment.dev.workflowservice.dto.StartRecruitmentRequest;
 import recruitment.dev.workflowservice.dto.StartRecruitmentResponse;
+import recruitment.dev.workflowservice.dto.application.ApplicationStatus;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,6 +23,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     private static final String PROCESS_KEY = "recruitmentProcess";
 
     private final RuntimeService runtimeService;
+    private final TaskService taskService;
 
     @Override
     @Transactional
@@ -48,6 +52,17 @@ public class WorkflowServiceImpl implements WorkflowService {
                         variables
                 );
 
+        Task currentTask = taskService
+                .createTaskQuery()
+                .processInstanceId(processInstance.getProcessInstanceId())
+                .active()
+                .orderByTaskCreateTime()
+                .asc()
+                .list()
+                .stream()
+                .findFirst()
+                .orElse(null);
+
         log.info(
                 "Recruitment workflow started: " +
                         "processInstanceId={}, applicationId={}",
@@ -63,8 +78,18 @@ public class WorkflowServiceImpl implements WorkflowService {
                         processInstance.getProcessDefinitionId()
                 )
                 .businessKey(processInstance.getBusinessKey())
-                .currentStatus("SUBMITTED")
+                .currentStatus(statusFor(currentTask).name())
+                .currentTaskId(currentTask == null ? null : currentTask.getId())
+                .currentTaskDefinitionKey(currentTask == null ? null : currentTask.getTaskDefinitionKey())
+                .currentTaskName(currentTask == null ? null : currentTask.getName())
                 .build();
+    }
+
+    private ApplicationStatus statusFor(Task task) {
+        if (task != null && "sid-3140788F-868D-4F20-88A1-D66AF0BA345A".equals(task.getTaskDefinitionKey())) {
+            return ApplicationStatus.CV_REVISION_REQUIRED;
+        }
+        return ApplicationStatus.SUBMITTED;
     }
 
     private void verifyNoActiveProcess(String businessKey) {

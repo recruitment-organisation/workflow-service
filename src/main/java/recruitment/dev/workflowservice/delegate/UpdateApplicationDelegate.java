@@ -20,8 +20,7 @@ public class UpdateApplicationDelegate implements JavaDelegate {
     @Override
     public void execute(DelegateExecution execution) {
         Long applicationId = requiredLong(execution, "applicationId");
-        Double aiScore = optionalDouble(execution, "aiScore");
-        String reason = determineReason(execution, aiScore);
+        String reason = determineReason(execution);
 
         applicationClient.updateStatus(
                 applicationId,
@@ -34,9 +33,9 @@ public class UpdateApplicationDelegate implements JavaDelegate {
         log.info("Application rejected: applicationId={}, reason={}", applicationId, reason);
     }
 
-    private String determineReason(DelegateExecution execution, Double aiScore) {
-        if (aiScore != null && aiScore < 70) {
-            return "AI_SCORE_BELOW_70";
+    private String determineReason(DelegateExecution execution) {
+        if (!booleanValue(execution, "hrCvApproved", true)) {
+            return combine("HR_CV_FILTER_REJECTED", optionalString(execution, "hrCvComment"));
         }
         if (!booleanValue(execution, "hrApproved", true)) {
             return combine("HR_REJECTED", optionalString(execution, "hrComment"));

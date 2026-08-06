@@ -11,4 +11,8 @@ public class StartRecruitmentResponse {
     private String processDefinitionId;
     private String businessKey;
     private String currentStatus;
+
+    private String currentTaskId;
+    private String currentTaskDefinitionKey;
+    private String currentTaskName;
 }

@@ -6,8 +6,11 @@ import org.flowable.engine.TaskService;
 import org.flowable.task.api.Task;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import recruitment.dev.workflowservice.client.ApplicationClient;
 import recruitment.dev.workflowservice.dto.CompleteTaskRequest;
 import recruitment.dev.workflowservice.dto.WorkflowTaskResponse;
+import recruitment.dev.workflowservice.dto.application.UpdateApplicationWorkflowStateRequest;
+import recruitment.dev.workflowservice.dto.application.ApplicationStatus;
 import recruitment.dev.workflowservice.exception.WorkflowTaskNotFoundException;
 
 import java.time.LocalDateTime;
@@ -20,6 +23,7 @@ import java.util.List;
 public class WorkflowTaskServiceImpl implements WorkflowTaskService {
 
     private final TaskService taskService;
+    private final ApplicationClient applicationClient;
 
     @Override
     @Transactional(readOnly = true)
@@ -49,6 +53,7 @@ public class WorkflowTaskServiceImpl implements WorkflowTaskService {
     @Transactional
     public void completeTask(CompleteTaskRequest request) {
         Task task = findTaskById(request.getTaskId());
+        Long applicationId = applicationIdFor(task);
 
         log.info(
                 "Completing workflow task: taskId={}, taskName={}, " +
@@ -63,6 +68,10 @@ public class WorkflowTaskServiceImpl implements WorkflowTaskService {
                 task.getId(),
                 request.getVariables()
         );
+
+        if (applicationId != null) {
+            synchronizeCurrentTask(applicationId, task.getProcessInstanceId());
+        }
 
         log.info(
                 "Workflow task completed: taskId={}, taskName={}",
@@ -85,6 +94,58 @@ public class WorkflowTaskServiceImpl implements WorkflowTaskService {
         }
 
         return task;
+    }
+
+    private Long applicationIdFor(Task task) {
+        Object value = taskService.getVariable(task.getId(), "applicationId");
+        if (value instanceof Number number) {
+            return number.longValue();
+        }
+        if (value instanceof String string) {
+            try {
+                return Long.valueOf(string);
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private void synchronizeCurrentTask(Long applicationId, String processInstanceId) {
+        Task currentTask = taskService
+                .createTaskQuery()
+                .processInstanceId(processInstanceId)
+                .active()
+                .orderByTaskCreateTime()
+                .asc()
+                .list()
+                .stream()
+                .findFirst()
+                .orElse(null);
+
+        applicationClient.updateWorkflowState(
+                applicationId,
+                new UpdateApplicationWorkflowStateRequest(
+                        processInstanceId,
+                        currentTask == null ? null : currentTask.getId(),
+                        currentTask == null ? null : currentTask.getTaskDefinitionKey(),
+                        currentTask == null ? null : currentTask.getName()
+                )
+        );
+
+        if (currentTask != null) {
+            ApplicationStatus nextStatus = switch (currentTask.getTaskDefinitionKey()) {
+                case "sid-3140788F-868D-4F20-88A1-D66AF0BA345A" -> ApplicationStatus.CV_REVISION_REQUIRED;
+                case "hrCvFiltering" -> ApplicationStatus.SUBMITTED;
+                case "hrInterview" -> ApplicationStatus.HR_INTERVIEW;
+                case "technicalInterview" -> ApplicationStatus.TECHNICAL_INTERVIEW;
+                case "managerInterview" -> ApplicationStatus.MANAGER_INTERVIEW;
+                default -> null;
+            };
+            if (nextStatus != null) {
+                applicationClient.updateStatus(applicationId, nextStatus.name());
+            }
+        }
     }
 
     private WorkflowTaskResponse toResponse(Task task) {
