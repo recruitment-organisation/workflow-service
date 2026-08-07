@@ -11,7 +11,7 @@ import recruitment.dev.workflowservice.dto.application.UpdateApplicationWorkflow
 import recruitment.dev.workflowservice.dto.application.UpdateMatchingScoreRequest;
 import recruitment.dev.workflowservice.security.FeignErrorConfig;
 import recruitment.dev.workflowservice.security.FeignSecurityConfig;
-
+//eeeee
 @FeignClient(
         name = "application-service",
         configuration = {FeignSecurityConfig.class, FeignErrorConfig.class},
