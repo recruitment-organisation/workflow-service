@@ -199,14 +199,13 @@ jobs:
           yq -i '.image.tag = strenv(VERSION)' values/applications/workflow-service.yaml
           echo "Nouveau contenu :"
           cat values/applications/workflow-service.yaml
-
       - name: Commit and push
         env:
           VERSION: ${{ needs.docker.outputs.version }}
         run: |
           cd gitops
-          git config  workflow user.name "github-actions[bot]"
-          git config  workflow user.email "github-actions[bot]@users.noreply.github.com"
-          git add values/applications/workflow-service.yaml
-          git commit -m "chore: bump workflow-service image to ${VERSION}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add values/applications/employee-service.yaml
+          git commit -m "chore: bump employee-service image to ${VERSION}"
           git push origin main
