@@ -108,7 +108,7 @@
       </timerEventDefinition>
     </boundaryEvent>
     <sequenceFlow id="sid-9B0B301A-C90E-450D-9115-875CBAE85466" name="Yes
-" sourceRef="sid-53587564-8F81-4247-B32D-BB1F2EE4CF86" targetRef="managerInterview">
+" sourceRef="sid-53587564-8F81-4247-B32D-BB1F2EE4CF86" targetRef="technicalInterview">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${hrApproved == true}]]></conditionExpression>
     </sequenceFlow>
     <sequenceFlow id="sid-76A37364-D370-48BF-B5AF-2F3A9AEF007A" name="No" sourceRef="sid-53587564-8F81-4247-B32D-BB1F2EE4CF86" targetRef="sid-08F3F0A0-7A22-477F-92F6-B4CFEAC4D742">
