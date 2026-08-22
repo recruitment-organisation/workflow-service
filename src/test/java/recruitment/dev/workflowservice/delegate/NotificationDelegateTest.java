@@ -4,8 +4,10 @@ import org.flowable.engine.delegate.DelegateExecution;
 import org.junit.jupiter.api.Test;
 import recruitment.dev.workflowservice.TestDelegateExecutionFactory;
 import recruitment.dev.workflowservice.client.CandidateClient;
+import recruitment.dev.workflowservice.client.JobOfferClient;
 import recruitment.dev.workflowservice.client.NotificationClient;
 import recruitment.dev.workflowservice.dto.candidate.CandidateResponse;
+import recruitment.dev.workflowservice.dto.joboffer.JobOfferResponse;
 import recruitment.dev.workflowservice.dto.notification.SendNotificationRequest;
 
 import java.util.Map;
@@ -29,7 +31,8 @@ class NotificationDelegateTest {
         );
         RecordingNotificationClient notificationClient = new RecordingNotificationClient();
 
-        NotificationDelegate delegate = new NotificationDelegate(candidateClient, notificationClient);
+        JobOfferClient jobOfferClient = jobOfferId -> null;
+        NotificationDelegate delegate = new NotificationDelegate(candidateClient, jobOfferClient, notificationClient);
         DelegateExecution execution = TestDelegateExecutionFactory.create(
                 Map.of(
                         "candidateId", 5L,
@@ -51,6 +54,46 @@ class NotificationDelegateTest {
         assertEquals(11L, notificationClient.lastRequest.applicationId());
         assertEquals("jean@example.com", notificationClient.lastRequest.recipientEmail());
         assertEquals("REJECTION", notificationClient.lastRequest.type().name());
+    }
+
+    @Test
+    void shouldSendAnEmploymentOfferAfterManagerAcceptance() {
+        CandidateClient candidateClient = candidateId -> new CandidateResponse(
+                candidateId,
+                "kc-2",
+                "Amina",
+                "Ben Salah",
+                "amina@example.com",
+                "+21698765432",
+                "Sousse"
+        );
+        JobOfferClient jobOfferClient = jobOfferId -> new JobOfferResponse(
+                jobOfferId,
+                "Ingénieure DevOps",
+                "Tunis",
+                "CDI"
+        );
+        RecordingNotificationClient notificationClient = new RecordingNotificationClient();
+        NotificationDelegate delegate = new NotificationDelegate(candidateClient, jobOfferClient, notificationClient);
+        DelegateExecution execution = TestDelegateExecutionFactory.create(
+                Map.of(
+                        "candidateId", 6L,
+                        "applicationId", 12L,
+                        "jobId", 9L,
+                        "managerApproved", true
+                ),
+                "Send employment offer notification"
+        );
+
+        delegate.execute(execution);
+
+        assertEquals("OFFER_ACCEPTED", execution.getVariable("notificationType"));
+        assertTrue(String.valueOf(execution.getVariable("notificationSubject")).contains("Ingénieure DevOps"));
+        assertTrue(String.valueOf(execution.getVariable("notificationMessage")).contains("CDI"));
+        assertTrue(String.valueOf(execution.getVariable("notificationMessage")).contains("Tunis"));
+        assertNotNull(notificationClient.lastRequest);
+        assertEquals("OFFER_ACCEPTED", notificationClient.lastRequest.type().name());
+        assertEquals("amina@example.com", notificationClient.lastRequest.recipientEmail());
     }
 
     private static final class RecordingNotificationClient implements NotificationClient {

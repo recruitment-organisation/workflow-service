@@ -151,6 +151,28 @@ class WorkflowTaskServiceImplTest {
     }
 
     @Test
+    void marksTheApplicationAsHiredAfterManagerAcceptanceCompletesTheProcess() {
+        Task completedTask = taskForCompletion("manager-task");
+        when(completedTask.getTaskDefinitionKey()).thenReturn("managerInterview");
+        CompleteTaskRequest request = new CompleteTaskRequest();
+        request.setTaskId("manager-task");
+        request.setVariables(Map.of("managerApproved", true));
+        when(taskService.createTaskQuery()).thenReturn(taskQuery);
+        when(taskQuery.taskId("manager-task")).thenReturn(taskQuery);
+        when(taskQuery.processInstanceId("process-1")).thenReturn(taskQuery);
+        when(taskQuery.active()).thenReturn(taskQuery);
+        when(taskQuery.orderByTaskCreateTime()).thenReturn(taskQuery);
+        when(taskQuery.asc()).thenReturn(taskQuery);
+        when(taskQuery.singleResult()).thenReturn(completedTask);
+        when(taskQuery.list()).thenReturn(List.of());
+        when(taskService.getVariable("manager-task", "applicationId")).thenReturn(10L);
+
+        service.completeTask(request);
+
+        verify(applicationClient).updateStatus(10L, ApplicationStatus.HIRED.name());
+    }
+
+    @Test
     void reportsUnknownTask() {
         when(taskService.createTaskQuery()).thenReturn(taskQuery);
         when(taskQuery.taskId("missing")).thenReturn(taskQuery);

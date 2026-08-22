@@ -70,7 +70,12 @@ public class WorkflowTaskServiceImpl implements WorkflowTaskService {
         );
 
         if (applicationId != null) {
-            synchronizeCurrentTask(applicationId, task.getProcessInstanceId());
+            synchronizeCurrentTask(
+                    applicationId,
+                    task.getProcessInstanceId(),
+                    task.getTaskDefinitionKey(),
+                    request.getVariables()
+            );
         }
 
         log.info(
@@ -111,7 +116,12 @@ public class WorkflowTaskServiceImpl implements WorkflowTaskService {
         return null;
     }
 
-    private void synchronizeCurrentTask(Long applicationId, String processInstanceId) {
+    private void synchronizeCurrentTask(
+            Long applicationId,
+            String processInstanceId,
+            String completedTaskDefinitionKey,
+            java.util.Map<String, Object> completedVariables
+    ) {
         Task currentTask = taskService
                 .createTaskQuery()
                 .processInstanceId(processInstanceId)
@@ -145,6 +155,9 @@ public class WorkflowTaskServiceImpl implements WorkflowTaskService {
             if (nextStatus != null) {
                 applicationClient.updateStatus(applicationId, nextStatus.name());
             }
+        } else if ("managerInterview".equals(completedTaskDefinitionKey)
+                && Boolean.TRUE.equals(completedVariables.get("managerApproved"))) {
+            applicationClient.updateStatus(applicationId, ApplicationStatus.HIRED.name());
         }
     }
 
